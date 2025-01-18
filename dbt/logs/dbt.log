@@ -1,0 +1,1167 @@
+[0m01:44:54.797764 [debug] [MainThread]: Got an exception trying to initialize tracking
+
+
+============================== 01:44:54.827606 | 8a7bd503-b058-4e05-b79f-ca98508f8b09 ==============================
+[0m01:44:54.827606 [info ] [MainThread]: Running with dbt=1.8.7
+[0m01:44:54.829649 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'indirect_selection': 'eager', 'log_cache_events': 'False', 'write_json': 'True', 'partial_parse': 'True', 'cache_selected_only': 'False', 'warn_error': 'None', 'version_check': 'True', 'fail_fast': 'False', 'log_path': '/opt/dbt/logs', 'debug': 'False', 'profiles_dir': '/home/airflow/.dbt', 'use_colors': 'True', 'use_experimental_parser': 'False', 'no_print': 'None', 'quiet': 'False', 'empty': 'False', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'introspect': 'True', 'invocation_command': 'dbt run --project-dir /opt/dbt', 'log_format': 'default', 'target_path': 'None', 'static_parser': 'True', 'send_anonymous_usage_stats': 'True'}
+[0m01:44:55.208152 [info ] [MainThread]: Registered adapter: postgres=1.9.0
+[0m01:44:55.336570 [debug] [MainThread]: checksum: 4af21dafb485259c48497ac86b711ddb1982f3d0f1c0ca4e09356de488b753c0, vars: {}, profile: , target: , version: 1.8.7
+[0m01:44:55.346031 [info ] [MainThread]: Unable to do partial parsing because saved manifest not found. Starting full parse.
+[0m01:44:56.227985 [warn ] [MainThread]: [[33mWARNING[0m]: Deprecated functionality
+The `tests` config has been renamed to `data_tests`. Please see
+https://docs.getdbt.com/docs/build/data-tests#new-data_tests-syntax for more
+information.
+[0m01:44:56.522458 [info ] [MainThread]: Found 8 models, 32 data tests, 5 sources, 429 macros
+[0m01:44:56.524880 [info ] [MainThread]: 
+[0m01:44:56.525673 [debug] [MainThread]: Acquiring new postgres connection 'master'
+[0m01:44:56.533408 [debug] [ThreadPool]: Acquiring new postgres connection 'list_data_warehouse'
+[0m01:44:56.600380 [debug] [ThreadPool]: Using postgres connection "list_data_warehouse"
+[0m01:44:56.601146 [debug] [ThreadPool]: On list_data_warehouse: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "connection_name": "list_data_warehouse"} */
+
+    select distinct nspname from pg_namespace
+  
+[0m01:44:56.601719 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m01:44:56.638103 [debug] [ThreadPool]: SQL status: SELECT 4 in 0.036 seconds
+[0m01:44:56.641312 [debug] [ThreadPool]: On list_data_warehouse: Close
+[0m01:44:56.647185 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_data_warehouse, now list_data_warehouse_public)
+[0m01:44:56.654887 [debug] [ThreadPool]: Using postgres connection "list_data_warehouse_public"
+[0m01:44:56.655466 [debug] [ThreadPool]: On list_data_warehouse_public: BEGIN
+[0m01:44:56.655922 [debug] [ThreadPool]: Opening a new connection, currently in state closed
+[0m01:44:56.666070 [debug] [ThreadPool]: SQL status: BEGIN in 0.010 seconds
+[0m01:44:56.668262 [debug] [ThreadPool]: Using postgres connection "list_data_warehouse_public"
+[0m01:44:56.670118 [debug] [ThreadPool]: On list_data_warehouse_public: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "connection_name": "list_data_warehouse_public"} */
+select
+      'data_warehouse' as database,
+      tablename as name,
+      schemaname as schema,
+      'table' as type
+    from pg_tables
+    where schemaname ilike 'public'
+    union all
+    select
+      'data_warehouse' as database,
+      viewname as name,
+      schemaname as schema,
+      'view' as type
+    from pg_views
+    where schemaname ilike 'public'
+    union all
+    select
+      'data_warehouse' as database,
+      matviewname as name,
+      schemaname as schema,
+      'materialized_view' as type
+    from pg_matviews
+    where schemaname ilike 'public'
+  
+[0m01:44:56.693247 [debug] [ThreadPool]: SQL status: SELECT 5 in 0.022 seconds
+[0m01:44:56.694923 [debug] [ThreadPool]: On list_data_warehouse_public: ROLLBACK
+[0m01:44:56.695477 [debug] [ThreadPool]: On list_data_warehouse_public: Close
+[0m01:44:56.702419 [debug] [MainThread]: Using postgres connection "master"
+[0m01:44:56.703265 [debug] [MainThread]: On master: BEGIN
+[0m01:44:56.703775 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m01:44:56.714064 [debug] [MainThread]: SQL status: BEGIN in 0.010 seconds
+[0m01:44:56.715719 [debug] [MainThread]: Using postgres connection "master"
+[0m01:44:56.716277 [debug] [MainThread]: On master: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "connection_name": "master"} */
+with relation as (
+        select
+            pg_rewrite.ev_class as class,
+            pg_rewrite.oid as id
+        from pg_rewrite
+    ),
+    class as (
+        select
+            oid as id,
+            relname as name,
+            relnamespace as schema,
+            relkind as kind
+        from pg_class
+    ),
+    dependency as (
+        select distinct
+            pg_depend.objid as id,
+            pg_depend.refobjid as ref
+        from pg_depend
+    ),
+    schema as (
+        select
+            pg_namespace.oid as id,
+            pg_namespace.nspname as name
+        from pg_namespace
+        where nspname != 'information_schema' and nspname not like 'pg\_%'
+    ),
+    referenced as (
+        select
+            relation.id AS id,
+            referenced_class.name ,
+            referenced_class.schema ,
+            referenced_class.kind
+        from relation
+        join class as referenced_class on relation.class=referenced_class.id
+        where referenced_class.kind in ('r', 'v', 'm')
+    ),
+    relationships as (
+        select
+            referenced.name as referenced_name,
+            referenced.schema as referenced_schema_id,
+            dependent_class.name as dependent_name,
+            dependent_class.schema as dependent_schema_id,
+            referenced.kind as kind
+        from referenced
+        join dependency on referenced.id=dependency.id
+        join class as dependent_class on dependency.ref=dependent_class.id
+        where
+            (referenced.name != dependent_class.name or
+             referenced.schema != dependent_class.schema)
+    )
+
+    select
+        referenced_schema.name as referenced_schema,
+        relationships.referenced_name as referenced_name,
+        dependent_schema.name as dependent_schema,
+        relationships.dependent_name as dependent_name
+    from relationships
+    join schema as dependent_schema on relationships.dependent_schema_id=dependent_schema.id
+    join schema as referenced_schema on relationships.referenced_schema_id=referenced_schema.id
+    group by referenced_schema, referenced_name, dependent_schema, dependent_name
+    order by referenced_schema, referenced_name, dependent_schema, dependent_name;
+[0m01:44:56.733211 [debug] [MainThread]: SQL status: SELECT 0 in 0.016 seconds
+[0m01:44:56.735040 [debug] [MainThread]: On master: ROLLBACK
+[0m01:44:56.735595 [debug] [MainThread]: Using postgres connection "master"
+[0m01:44:56.736050 [debug] [MainThread]: On master: BEGIN
+[0m01:44:56.736636 [debug] [MainThread]: SQL status: BEGIN in 0.000 seconds
+[0m01:44:56.736986 [debug] [MainThread]: On master: COMMIT
+[0m01:44:56.737318 [debug] [MainThread]: Using postgres connection "master"
+[0m01:44:56.737595 [debug] [MainThread]: On master: COMMIT
+[0m01:44:56.738019 [debug] [MainThread]: SQL status: COMMIT in 0.000 seconds
+[0m01:44:56.738326 [debug] [MainThread]: On master: Close
+[0m01:44:56.738981 [info ] [MainThread]: Concurrency: 1 threads (target='dev')
+[0m01:44:56.739841 [info ] [MainThread]: 
+[0m01:44:56.751191 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.categories
+[0m01:44:56.751835 [info ] [Thread-1 (]: 1 of 8 START sql table model public.categories ................................. [RUN]
+[0m01:44:56.752660 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly list_data_warehouse_public, now model.data_pipeline_project.categories)
+[0m01:44:56.753166 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.categories
+[0m01:44:56.758875 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.categories"
+[0m01:44:56.762136 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.categories
+[0m01:44:56.791166 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.categories"
+[0m01:44:56.793177 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:44:56.793554 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: BEGIN
+[0m01:44:56.793879 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:44:56.799998 [debug] [Thread-1 (]: SQL status: BEGIN in 0.006 seconds
+[0m01:44:56.800423 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:44:56.800766 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.categories"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."categories__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    id,
+    name,
+    created_at,
+    updated_at
+FROM "data_warehouse"."public"."categories"
+  );
+  
+[0m01:44:56.829349 [debug] [Thread-1 (]: SQL status: SELECT 30 in 0.028 seconds
+[0m01:44:56.834552 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:44:56.835353 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.categories"} */
+alter table "data_warehouse"."public"."categories" rename to "categories__dbt_backup"
+[0m01:44:56.838251 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.002 seconds
+[0m01:44:56.840358 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:44:56.840770 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.categories"} */
+alter table "data_warehouse"."public"."categories__dbt_tmp" rename to "categories"
+[0m01:44:56.841308 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:44:56.855479 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: COMMIT
+[0m01:44:56.855989 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:44:56.856584 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: COMMIT
+[0m01:44:56.858772 [debug] [Thread-1 (]: SQL status: COMMIT in 0.002 seconds
+[0m01:44:56.864876 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."categories__dbt_backup"
+[0m01:44:56.868312 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:44:56.868851 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.categories"} */
+drop table if exists "data_warehouse"."public"."categories__dbt_backup" cascade
+[0m01:44:56.908275 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.039 seconds
+[0m01:44:56.912672 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: Close
+[0m01:44:56.917342 [info ] [Thread-1 (]: 1 of 8 OK created sql table model public.categories ............................ [[32mSELECT 30[0m in 0.16s]
+[0m01:44:56.918863 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.categories
+[0m01:44:56.920745 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.goods
+[0m01:44:56.921608 [info ] [Thread-1 (]: 2 of 8 START sql table model public.goods ...................................... [RUN]
+[0m01:44:56.922573 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.categories, now model.data_pipeline_project.goods)
+[0m01:44:56.923036 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.goods
+[0m01:44:56.925340 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.goods"
+[0m01:44:56.926453 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.goods
+[0m01:44:56.934820 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.goods"
+[0m01:44:56.940275 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:44:56.943032 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: BEGIN
+[0m01:44:56.944537 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:44:56.952074 [debug] [Thread-1 (]: SQL status: BEGIN in 0.007 seconds
+[0m01:44:56.954410 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:44:56.956240 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.goods"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."goods__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    id,
+    category_id,
+    name,
+    price,
+    created_at,
+    updated_at
+FROM "data_warehouse"."public"."goods"
+  );
+  
+[0m01:44:56.968269 [debug] [Thread-1 (]: SQL status: SELECT 220 in 0.011 seconds
+[0m01:44:56.971802 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:44:56.972232 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.goods"} */
+alter table "data_warehouse"."public"."goods" rename to "goods__dbt_backup"
+[0m01:44:56.973523 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.001 seconds
+[0m01:44:56.976239 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:44:56.976686 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.goods"} */
+alter table "data_warehouse"."public"."goods__dbt_tmp" rename to "goods"
+[0m01:44:56.977623 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:44:56.980123 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: COMMIT
+[0m01:44:56.981463 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:44:56.983088 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: COMMIT
+[0m01:44:56.983944 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m01:44:56.990471 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."goods__dbt_backup"
+[0m01:44:56.991654 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:44:56.992731 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.goods"} */
+drop table if exists "data_warehouse"."public"."goods__dbt_backup" cascade
+[0m01:44:57.000619 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.006 seconds
+[0m01:44:57.005051 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: Close
+[0m01:44:57.006251 [info ] [Thread-1 (]: 2 of 8 OK created sql table model public.goods ................................. [[32mSELECT 220[0m in 0.08s]
+[0m01:44:57.007826 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.goods
+[0m01:44:57.008720 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.order_item
+[0m01:44:57.010211 [info ] [Thread-1 (]: 3 of 8 START sql table model public.order_item ................................. [RUN]
+[0m01:44:57.011748 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.goods, now model.data_pipeline_project.order_item)
+[0m01:44:57.012754 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.order_item
+[0m01:44:57.016581 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.order_item"
+[0m01:44:57.019040 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.order_item
+[0m01:44:57.025263 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.order_item"
+[0m01:44:57.026763 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:44:57.028199 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: BEGIN
+[0m01:44:57.029022 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:44:57.040886 [debug] [Thread-1 (]: SQL status: BEGIN in 0.012 seconds
+[0m01:44:57.042686 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:44:57.043932 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.order_item"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."order_item__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    id,
+    order_id,
+    goods_id,
+    qty,
+    created_at,
+    updated_at
+FROM "data_warehouse"."public"."order_item"
+  );
+  
+[0m01:44:57.069154 [debug] [Thread-1 (]: SQL status: SELECT 3060 in 0.024 seconds
+[0m01:44:57.073869 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:44:57.074492 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.order_item"} */
+alter table "data_warehouse"."public"."order_item" rename to "order_item__dbt_backup"
+[0m01:44:57.075531 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:44:57.077968 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:44:57.078346 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.order_item"} */
+alter table "data_warehouse"."public"."order_item__dbt_tmp" rename to "order_item"
+[0m01:44:57.078890 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:44:57.080620 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: COMMIT
+[0m01:44:57.081460 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:44:57.082527 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: COMMIT
+[0m01:44:57.087392 [debug] [Thread-1 (]: SQL status: COMMIT in 0.004 seconds
+[0m01:44:57.089994 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."order_item__dbt_backup"
+[0m01:44:57.090824 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:44:57.091185 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.order_item"} */
+drop table if exists "data_warehouse"."public"."order_item__dbt_backup" cascade
+[0m01:44:57.094908 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.003 seconds
+[0m01:44:57.096867 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: Close
+[0m01:44:57.098073 [info ] [Thread-1 (]: 3 of 8 OK created sql table model public.order_item ............................ [[32mSELECT 3060[0m in 0.09s]
+[0m01:44:57.099319 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.order_item
+[0m01:44:57.100048 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.orders
+[0m01:44:57.100700 [info ] [Thread-1 (]: 4 of 8 START sql table model public.orders ..................................... [RUN]
+[0m01:44:57.101730 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.order_item, now model.data_pipeline_project.orders)
+[0m01:44:57.102572 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.orders
+[0m01:44:57.106821 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.orders"
+[0m01:44:57.108034 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.orders
+[0m01:44:57.114808 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.orders"
+[0m01:44:57.118126 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:44:57.118706 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: BEGIN
+[0m01:44:57.119212 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:44:57.126331 [debug] [Thread-1 (]: SQL status: BEGIN in 0.007 seconds
+[0m01:44:57.128214 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:44:57.128707 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.orders"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."orders__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    id,
+    user_id,
+    is_refund,
+    created_at,
+    updated_at
+FROM "data_warehouse"."public"."orders"
+  );
+  
+[0m01:44:57.134718 [debug] [Thread-1 (]: SQL status: SELECT 1240 in 0.005 seconds
+[0m01:44:57.137346 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:44:57.137745 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.orders"} */
+alter table "data_warehouse"."public"."orders" rename to "orders__dbt_backup"
+[0m01:44:57.138306 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:44:57.140633 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:44:57.141019 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.orders"} */
+alter table "data_warehouse"."public"."orders__dbt_tmp" rename to "orders"
+[0m01:44:57.142206 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:44:57.145102 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: COMMIT
+[0m01:44:57.145916 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:44:57.146604 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: COMMIT
+[0m01:44:57.148376 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m01:44:57.150691 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."orders__dbt_backup"
+[0m01:44:57.151543 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:44:57.152132 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.orders"} */
+drop table if exists "data_warehouse"."public"."orders__dbt_backup" cascade
+[0m01:44:57.154346 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.002 seconds
+[0m01:44:57.155524 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: Close
+[0m01:44:57.157744 [info ] [Thread-1 (]: 4 of 8 OK created sql table model public.orders ................................ [[32mSELECT 1240[0m in 0.06s]
+[0m01:44:57.160823 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.orders
+[0m01:44:57.161884 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.users
+[0m01:44:57.162578 [info ] [Thread-1 (]: 5 of 8 START sql table model public.users ...................................... [RUN]
+[0m01:44:57.163440 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.orders, now model.data_pipeline_project.users)
+[0m01:44:57.164076 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.users
+[0m01:44:57.167074 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.users"
+[0m01:44:57.168274 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.users
+[0m01:44:57.173058 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.users"
+[0m01:44:57.174366 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:44:57.175146 [debug] [Thread-1 (]: On model.data_pipeline_project.users: BEGIN
+[0m01:44:57.175464 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:44:57.181937 [debug] [Thread-1 (]: SQL status: BEGIN in 0.006 seconds
+[0m01:44:57.182735 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:44:57.183107 [debug] [Thread-1 (]: On model.data_pipeline_project.users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.users"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."users__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    id,
+    name,
+    email,
+    phone,
+    created_at,
+    updated_at
+FROM "data_warehouse"."public"."users"
+  );
+  
+[0m01:44:57.188070 [debug] [Thread-1 (]: SQL status: SELECT 100 in 0.004 seconds
+[0m01:44:57.190566 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:44:57.191725 [debug] [Thread-1 (]: On model.data_pipeline_project.users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.users"} */
+alter table "data_warehouse"."public"."users" rename to "users__dbt_backup"
+[0m01:44:57.193148 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:44:57.196238 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:44:57.196870 [debug] [Thread-1 (]: On model.data_pipeline_project.users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.users"} */
+alter table "data_warehouse"."public"."users__dbt_tmp" rename to "users"
+[0m01:44:57.198506 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:44:57.200587 [debug] [Thread-1 (]: On model.data_pipeline_project.users: COMMIT
+[0m01:44:57.201254 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:44:57.202153 [debug] [Thread-1 (]: On model.data_pipeline_project.users: COMMIT
+[0m01:44:57.203206 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m01:44:57.204934 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."users__dbt_backup"
+[0m01:44:57.205835 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:44:57.206187 [debug] [Thread-1 (]: On model.data_pipeline_project.users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.users"} */
+drop table if exists "data_warehouse"."public"."users__dbt_backup" cascade
+[0m01:44:57.207842 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.001 seconds
+[0m01:44:57.208793 [debug] [Thread-1 (]: On model.data_pipeline_project.users: Close
+[0m01:44:57.209461 [info ] [Thread-1 (]: 5 of 8 OK created sql table model public.users ................................. [[32mSELECT 100[0m in 0.05s]
+[0m01:44:57.210416 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.users
+[0m01:44:57.210936 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.dim_goods
+[0m01:44:57.211863 [info ] [Thread-1 (]: 6 of 8 START sql table model public.dim_goods .................................. [RUN]
+[0m01:44:57.212335 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.users, now model.data_pipeline_project.dim_goods)
+[0m01:44:57.212817 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.dim_goods
+[0m01:44:57.215179 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.dim_goods"
+[0m01:44:57.216422 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.dim_goods
+[0m01:44:57.218745 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.dim_goods"
+[0m01:44:57.219961 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_goods"
+[0m01:44:57.220748 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: BEGIN
+[0m01:44:57.222876 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:44:57.245170 [debug] [Thread-1 (]: SQL status: BEGIN in 0.022 seconds
+[0m01:44:57.246198 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_goods"
+[0m01:44:57.246734 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_goods"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."dim_goods__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    *
+FROM "data_warehouse"."public"."goods"
+  );
+  
+[0m01:44:57.255477 [debug] [Thread-1 (]: SQL status: SELECT 220 in 0.008 seconds
+[0m01:44:57.260384 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_goods"
+[0m01:44:57.260808 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_goods"} */
+alter table "data_warehouse"."public"."dim_goods__dbt_tmp" rename to "dim_goods"
+[0m01:44:57.261426 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:44:57.262479 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: COMMIT
+[0m01:44:57.262825 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_goods"
+[0m01:44:57.263159 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: COMMIT
+[0m01:44:57.264129 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m01:44:57.265749 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."dim_goods__dbt_backup"
+[0m01:44:57.266336 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_goods"
+[0m01:44:57.266635 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_goods"} */
+drop table if exists "data_warehouse"."public"."dim_goods__dbt_backup" cascade
+[0m01:44:57.267044 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.000 seconds
+[0m01:44:57.267926 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: Close
+[0m01:44:57.268606 [info ] [Thread-1 (]: 6 of 8 OK created sql table model public.dim_goods ............................. [[32mSELECT 220[0m in 0.06s]
+[0m01:44:57.269363 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.dim_goods
+[0m01:44:57.269838 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.dim_users
+[0m01:44:57.270333 [info ] [Thread-1 (]: 7 of 8 START sql table model public.dim_users .................................. [RUN]
+[0m01:44:57.270920 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.dim_goods, now model.data_pipeline_project.dim_users)
+[0m01:44:57.271233 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.dim_users
+[0m01:44:57.273348 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.dim_users"
+[0m01:44:57.274264 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.dim_users
+[0m01:44:57.276613 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.dim_users"
+[0m01:44:57.277592 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_users"
+[0m01:44:57.277963 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: BEGIN
+[0m01:44:57.278296 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:44:57.282400 [debug] [Thread-1 (]: SQL status: BEGIN in 0.004 seconds
+[0m01:44:57.282742 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_users"
+[0m01:44:57.283089 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_users"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."dim_users__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    u.id AS user_id,
+    u.name,
+    u.email,
+    u.phone,
+    MAX(o.updated_at) AS last_transaction
+FROM "data_warehouse"."public"."users" AS u
+LEFT JOIN "data_warehouse"."public"."orders" AS o ON u.id = o.user_id
+GROUP BY u.id, u.name, u.email, u.phone
+  );
+  
+[0m01:44:57.288455 [debug] [Thread-1 (]: SQL status: SELECT 100 in 0.005 seconds
+[0m01:44:57.290255 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_users"
+[0m01:44:57.290564 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_users"} */
+alter table "data_warehouse"."public"."dim_users__dbt_tmp" rename to "dim_users"
+[0m01:44:57.290998 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:44:57.292219 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: COMMIT
+[0m01:44:57.292555 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_users"
+[0m01:44:57.292866 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: COMMIT
+[0m01:44:57.293721 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m01:44:57.295187 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."dim_users__dbt_backup"
+[0m01:44:57.295730 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_users"
+[0m01:44:57.296065 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_users"} */
+drop table if exists "data_warehouse"."public"."dim_users__dbt_backup" cascade
+[0m01:44:57.296529 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.000 seconds
+[0m01:44:57.297376 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: Close
+[0m01:44:57.298143 [info ] [Thread-1 (]: 7 of 8 OK created sql table model public.dim_users ............................. [[32mSELECT 100[0m in 0.03s]
+[0m01:44:57.299445 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.dim_users
+[0m01:44:57.300013 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.fact_transactions
+[0m01:44:57.300669 [info ] [Thread-1 (]: 8 of 8 START sql table model public.fact_transactions .......................... [RUN]
+[0m01:44:57.301436 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.dim_users, now model.data_pipeline_project.fact_transactions)
+[0m01:44:57.302036 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.fact_transactions
+[0m01:44:57.305520 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.fact_transactions"
+[0m01:44:57.306566 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.fact_transactions
+[0m01:44:57.309481 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.fact_transactions"
+[0m01:44:57.310334 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.fact_transactions"
+[0m01:44:57.310638 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: BEGIN
+[0m01:44:57.310967 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:44:57.316642 [debug] [Thread-1 (]: SQL status: BEGIN in 0.006 seconds
+[0m01:44:57.317199 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.fact_transactions"
+[0m01:44:57.317575 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.fact_transactions"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."fact_transactions__dbt_tmp"
+  
+  
+    as
+  
+  (
+    WITH fact_base AS (
+    SELECT
+        o.user_id AS user_id,
+        u.name AS user_name,
+        oi.id AS order_item_id,
+        oi.qty AS number_of_items_ordered,
+        oi.qty * g.price AS total_purchase_value,
+        o.created_at AS order_date
+    FROM "data_warehouse"."public"."order_item" oi
+    JOIN "data_warehouse"."public"."goods" g ON oi.goods_id = g.id
+    JOIN "data_warehouse"."public"."orders" o ON oi.order_id = o.id
+    JOIN "data_warehouse"."public"."users" u ON o.user_id = u.id
+)
+SELECT * FROM fact_base
+  );
+  
+[0m01:44:57.335185 [debug] [Thread-1 (]: SQL status: SELECT 3060 in 0.017 seconds
+[0m01:44:57.337779 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.fact_transactions"
+[0m01:44:57.338187 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.fact_transactions"} */
+alter table "data_warehouse"."public"."fact_transactions__dbt_tmp" rename to "fact_transactions"
+[0m01:44:57.338736 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:44:57.339890 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: COMMIT
+[0m01:44:57.340215 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.fact_transactions"
+[0m01:44:57.340522 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: COMMIT
+[0m01:44:57.342398 [debug] [Thread-1 (]: SQL status: COMMIT in 0.002 seconds
+[0m01:44:57.344109 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."fact_transactions__dbt_backup"
+[0m01:44:57.344889 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.fact_transactions"
+[0m01:44:57.345315 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.fact_transactions"} */
+drop table if exists "data_warehouse"."public"."fact_transactions__dbt_backup" cascade
+[0m01:44:57.345957 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.000 seconds
+[0m01:44:57.347028 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: Close
+[0m01:44:57.347764 [info ] [Thread-1 (]: 8 of 8 OK created sql table model public.fact_transactions ..................... [[32mSELECT 3060[0m in 0.05s]
+[0m01:44:57.348872 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.fact_transactions
+[0m01:44:57.352687 [debug] [MainThread]: Using postgres connection "master"
+[0m01:44:57.353114 [debug] [MainThread]: On master: BEGIN
+[0m01:44:57.353446 [debug] [MainThread]: Opening a new connection, currently in state closed
+[0m01:44:57.359281 [debug] [MainThread]: SQL status: BEGIN in 0.006 seconds
+[0m01:44:57.359666 [debug] [MainThread]: On master: COMMIT
+[0m01:44:57.360048 [debug] [MainThread]: Using postgres connection "master"
+[0m01:44:57.360339 [debug] [MainThread]: On master: COMMIT
+[0m01:44:57.360704 [debug] [MainThread]: SQL status: COMMIT in 0.000 seconds
+[0m01:44:57.361070 [debug] [MainThread]: On master: Close
+[0m01:44:57.361506 [debug] [MainThread]: Connection 'master' was properly closed.
+[0m01:44:57.361904 [debug] [MainThread]: Connection 'model.data_pipeline_project.fact_transactions' was properly closed.
+[0m01:44:57.362494 [info ] [MainThread]: 
+[0m01:44:57.362926 [info ] [MainThread]: Finished running 8 table models in 0 hours 0 minutes and 0.84 seconds (0.84s).
+[0m01:44:57.364085 [debug] [MainThread]: Command end result
+[0m01:44:57.409554 [info ] [MainThread]: 
+[0m01:44:57.410298 [info ] [MainThread]: [32mCompleted successfully[0m
+[0m01:44:57.410729 [info ] [MainThread]: 
+[0m01:44:57.411311 [info ] [MainThread]: Done. PASS=8 WARN=0 ERROR=0 SKIP=0 TOTAL=8
+[0m01:44:57.414968 [debug] [MainThread]: Resource report: {"command_name": "run", "command_success": true, "command_wall_clock_time": 2.6514199, "process_user_time": 3.010501, "process_kernel_time": 1.90491, "process_mem_max_rss": "195652", "process_in_blocks": "27568", "process_out_blocks": "3688"}
+[0m01:44:57.415944 [debug] [MainThread]: Command `dbt run` succeeded at 01:44:57.415858 after 2.65 seconds
+[0m01:44:57.416500 [debug] [MainThread]: Flushing usage events
+[0m01:45:02.382036 [debug] [MainThread]: Got an exception trying to initialize tracking
+
+
+============================== 01:45:02.402148 | f0decf89-2cc7-4b71-95e3-baea27c55013 ==============================
+[0m01:45:02.402148 [info ] [MainThread]: Running with dbt=1.8.7
+[0m01:45:02.403111 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'indirect_selection': 'eager', 'write_json': 'True', 'log_cache_events': 'False', 'partial_parse': 'True', 'cache_selected_only': 'False', 'warn_error': 'None', 'debug': 'False', 'version_check': 'True', 'log_path': '/opt/dbt/logs', 'fail_fast': 'False', 'profiles_dir': '/home/airflow/.dbt', 'use_colors': 'True', 'use_experimental_parser': 'False', 'empty': 'False', 'quiet': 'False', 'no_print': 'None', 'log_format': 'default', 'invocation_command': 'dbt run --project-dir /opt/dbt', 'introspect': 'True', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'target_path': 'None', 'static_parser': 'True', 'send_anonymous_usage_stats': 'True'}
+[0m01:45:02.576479 [info ] [MainThread]: Registered adapter: postgres=1.9.0
+[0m01:45:02.657408 [debug] [MainThread]: checksum: 4af21dafb485259c48497ac86b711ddb1982f3d0f1c0ca4e09356de488b753c0, vars: {}, profile: , target: , version: 1.8.7
+[0m01:45:02.769778 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 0 files added, 0 files changed.
+[0m01:45:02.771036 [debug] [MainThread]: Partial parsing enabled, no changes found, skipping parsing
+[0m01:45:02.919717 [info ] [MainThread]: Found 8 models, 32 data tests, 5 sources, 429 macros
+[0m01:45:02.922134 [info ] [MainThread]: 
+[0m01:45:02.922872 [debug] [MainThread]: Acquiring new postgres connection 'master'
+[0m01:45:02.926080 [debug] [ThreadPool]: Acquiring new postgres connection 'list_data_warehouse'
+[0m01:45:02.958618 [debug] [ThreadPool]: Using postgres connection "list_data_warehouse"
+[0m01:45:02.959440 [debug] [ThreadPool]: On list_data_warehouse: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "connection_name": "list_data_warehouse"} */
+
+    select distinct nspname from pg_namespace
+  
+[0m01:45:02.960066 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m01:45:03.005623 [debug] [ThreadPool]: SQL status: SELECT 4 in 0.045 seconds
+[0m01:45:03.007333 [debug] [ThreadPool]: On list_data_warehouse: Close
+[0m01:45:03.009453 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_data_warehouse, now list_data_warehouse_public)
+[0m01:45:03.014867 [debug] [ThreadPool]: Using postgres connection "list_data_warehouse_public"
+[0m01:45:03.015263 [debug] [ThreadPool]: On list_data_warehouse_public: BEGIN
+[0m01:45:03.015607 [debug] [ThreadPool]: Opening a new connection, currently in state closed
+[0m01:45:03.023241 [debug] [ThreadPool]: SQL status: BEGIN in 0.008 seconds
+[0m01:45:03.023991 [debug] [ThreadPool]: Using postgres connection "list_data_warehouse_public"
+[0m01:45:03.024370 [debug] [ThreadPool]: On list_data_warehouse_public: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "connection_name": "list_data_warehouse_public"} */
+select
+      'data_warehouse' as database,
+      tablename as name,
+      schemaname as schema,
+      'table' as type
+    from pg_tables
+    where schemaname ilike 'public'
+    union all
+    select
+      'data_warehouse' as database,
+      viewname as name,
+      schemaname as schema,
+      'view' as type
+    from pg_views
+    where schemaname ilike 'public'
+    union all
+    select
+      'data_warehouse' as database,
+      matviewname as name,
+      schemaname as schema,
+      'materialized_view' as type
+    from pg_matviews
+    where schemaname ilike 'public'
+  
+[0m01:45:03.029765 [debug] [ThreadPool]: SQL status: SELECT 8 in 0.005 seconds
+[0m01:45:03.030995 [debug] [ThreadPool]: On list_data_warehouse_public: ROLLBACK
+[0m01:45:03.031424 [debug] [ThreadPool]: On list_data_warehouse_public: Close
+[0m01:45:03.035752 [debug] [MainThread]: Using postgres connection "master"
+[0m01:45:03.036111 [debug] [MainThread]: On master: BEGIN
+[0m01:45:03.036435 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m01:45:03.044077 [debug] [MainThread]: SQL status: BEGIN in 0.008 seconds
+[0m01:45:03.044529 [debug] [MainThread]: Using postgres connection "master"
+[0m01:45:03.044922 [debug] [MainThread]: On master: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "connection_name": "master"} */
+with relation as (
+        select
+            pg_rewrite.ev_class as class,
+            pg_rewrite.oid as id
+        from pg_rewrite
+    ),
+    class as (
+        select
+            oid as id,
+            relname as name,
+            relnamespace as schema,
+            relkind as kind
+        from pg_class
+    ),
+    dependency as (
+        select distinct
+            pg_depend.objid as id,
+            pg_depend.refobjid as ref
+        from pg_depend
+    ),
+    schema as (
+        select
+            pg_namespace.oid as id,
+            pg_namespace.nspname as name
+        from pg_namespace
+        where nspname != 'information_schema' and nspname not like 'pg\_%'
+    ),
+    referenced as (
+        select
+            relation.id AS id,
+            referenced_class.name ,
+            referenced_class.schema ,
+            referenced_class.kind
+        from relation
+        join class as referenced_class on relation.class=referenced_class.id
+        where referenced_class.kind in ('r', 'v', 'm')
+    ),
+    relationships as (
+        select
+            referenced.name as referenced_name,
+            referenced.schema as referenced_schema_id,
+            dependent_class.name as dependent_name,
+            dependent_class.schema as dependent_schema_id,
+            referenced.kind as kind
+        from referenced
+        join dependency on referenced.id=dependency.id
+        join class as dependent_class on dependency.ref=dependent_class.id
+        where
+            (referenced.name != dependent_class.name or
+             referenced.schema != dependent_class.schema)
+    )
+
+    select
+        referenced_schema.name as referenced_schema,
+        relationships.referenced_name as referenced_name,
+        dependent_schema.name as dependent_schema,
+        relationships.dependent_name as dependent_name
+    from relationships
+    join schema as dependent_schema on relationships.dependent_schema_id=dependent_schema.id
+    join schema as referenced_schema on relationships.referenced_schema_id=referenced_schema.id
+    group by referenced_schema, referenced_name, dependent_schema, dependent_name
+    order by referenced_schema, referenced_name, dependent_schema, dependent_name;
+[0m01:45:03.053501 [debug] [MainThread]: SQL status: SELECT 0 in 0.008 seconds
+[0m01:45:03.054563 [debug] [MainThread]: On master: ROLLBACK
+[0m01:45:03.055029 [debug] [MainThread]: Using postgres connection "master"
+[0m01:45:03.055375 [debug] [MainThread]: On master: BEGIN
+[0m01:45:03.055875 [debug] [MainThread]: SQL status: BEGIN in 0.000 seconds
+[0m01:45:03.056197 [debug] [MainThread]: On master: COMMIT
+[0m01:45:03.056499 [debug] [MainThread]: Using postgres connection "master"
+[0m01:45:03.056787 [debug] [MainThread]: On master: COMMIT
+[0m01:45:03.057127 [debug] [MainThread]: SQL status: COMMIT in 0.000 seconds
+[0m01:45:03.057460 [debug] [MainThread]: On master: Close
+[0m01:45:03.057971 [info ] [MainThread]: Concurrency: 1 threads (target='dev')
+[0m01:45:03.059028 [info ] [MainThread]: 
+[0m01:45:03.067249 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.categories
+[0m01:45:03.068306 [info ] [Thread-1 (]: 1 of 8 START sql table model public.categories ................................. [RUN]
+[0m01:45:03.069363 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly list_data_warehouse_public, now model.data_pipeline_project.categories)
+[0m01:45:03.069852 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.categories
+[0m01:45:03.076483 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.categories"
+[0m01:45:03.077709 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.categories
+[0m01:45:03.104133 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.categories"
+[0m01:45:03.105535 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:45:03.105935 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: BEGIN
+[0m01:45:03.106314 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:45:03.110650 [debug] [Thread-1 (]: SQL status: BEGIN in 0.004 seconds
+[0m01:45:03.111041 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:45:03.111399 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.categories"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."categories__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    id,
+    name,
+    created_at,
+    updated_at
+FROM "data_warehouse"."public"."categories"
+  );
+  
+[0m01:45:03.116983 [debug] [Thread-1 (]: SQL status: SELECT 30 in 0.005 seconds
+[0m01:45:03.122515 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:45:03.123187 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.categories"} */
+alter table "data_warehouse"."public"."categories" rename to "categories__dbt_backup"
+[0m01:45:03.124083 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.126104 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:45:03.126452 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.categories"} */
+alter table "data_warehouse"."public"."categories__dbt_tmp" rename to "categories"
+[0m01:45:03.126945 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.138370 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: COMMIT
+[0m01:45:03.138859 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:45:03.139215 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: COMMIT
+[0m01:45:03.140179 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m01:45:03.143939 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."categories__dbt_backup"
+[0m01:45:03.147212 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.categories"
+[0m01:45:03.147657 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.categories"} */
+drop table if exists "data_warehouse"."public"."categories__dbt_backup" cascade
+[0m01:45:03.151038 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.003 seconds
+[0m01:45:03.153050 [debug] [Thread-1 (]: On model.data_pipeline_project.categories: Close
+[0m01:45:03.155953 [info ] [Thread-1 (]: 1 of 8 OK created sql table model public.categories ............................ [[32mSELECT 30[0m in 0.08s]
+[0m01:45:03.157308 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.categories
+[0m01:45:03.157911 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.goods
+[0m01:45:03.158388 [info ] [Thread-1 (]: 2 of 8 START sql table model public.goods ...................................... [RUN]
+[0m01:45:03.158991 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.categories, now model.data_pipeline_project.goods)
+[0m01:45:03.159357 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.goods
+[0m01:45:03.161413 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.goods"
+[0m01:45:03.162338 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.goods
+[0m01:45:03.164760 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.goods"
+[0m01:45:03.165800 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:45:03.166118 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: BEGIN
+[0m01:45:03.166431 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:45:03.172330 [debug] [Thread-1 (]: SQL status: BEGIN in 0.006 seconds
+[0m01:45:03.172731 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:45:03.173103 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.goods"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."goods__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    id,
+    category_id,
+    name,
+    price,
+    created_at,
+    updated_at
+FROM "data_warehouse"."public"."goods"
+  );
+  
+[0m01:45:03.179694 [debug] [Thread-1 (]: SQL status: SELECT 220 in 0.006 seconds
+[0m01:45:03.182102 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:45:03.182450 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.goods"} */
+alter table "data_warehouse"."public"."goods" rename to "goods__dbt_backup"
+[0m01:45:03.183076 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.186191 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:45:03.186544 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.goods"} */
+alter table "data_warehouse"."public"."goods__dbt_tmp" rename to "goods"
+[0m01:45:03.187112 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.188253 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: COMMIT
+[0m01:45:03.188606 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:45:03.188925 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: COMMIT
+[0m01:45:03.189578 [debug] [Thread-1 (]: SQL status: COMMIT in 0.000 seconds
+[0m01:45:03.250132 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."goods__dbt_backup"
+[0m01:45:03.250936 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.goods"
+[0m01:45:03.251325 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.goods"} */
+drop table if exists "data_warehouse"."public"."goods__dbt_backup" cascade
+[0m01:45:03.254372 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.003 seconds
+[0m01:45:03.255363 [debug] [Thread-1 (]: On model.data_pipeline_project.goods: Close
+[0m01:45:03.256328 [info ] [Thread-1 (]: 2 of 8 OK created sql table model public.goods ................................. [[32mSELECT 220[0m in 0.10s]
+[0m01:45:03.257511 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.goods
+[0m01:45:03.258069 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.order_item
+[0m01:45:03.258877 [info ] [Thread-1 (]: 3 of 8 START sql table model public.order_item ................................. [RUN]
+[0m01:45:03.259422 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.goods, now model.data_pipeline_project.order_item)
+[0m01:45:03.259756 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.order_item
+[0m01:45:03.261506 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.order_item"
+[0m01:45:03.262536 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.order_item
+[0m01:45:03.264955 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.order_item"
+[0m01:45:03.265837 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:45:03.266180 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: BEGIN
+[0m01:45:03.266525 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:45:03.271208 [debug] [Thread-1 (]: SQL status: BEGIN in 0.005 seconds
+[0m01:45:03.271573 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:45:03.271956 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.order_item"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."order_item__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    id,
+    order_id,
+    goods_id,
+    qty,
+    created_at,
+    updated_at
+FROM "data_warehouse"."public"."order_item"
+  );
+  
+[0m01:45:03.281712 [debug] [Thread-1 (]: SQL status: SELECT 3060 in 0.009 seconds
+[0m01:45:03.284214 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:45:03.284555 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.order_item"} */
+alter table "data_warehouse"."public"."order_item" rename to "order_item__dbt_backup"
+[0m01:45:03.285123 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.286937 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:45:03.287283 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.order_item"} */
+alter table "data_warehouse"."public"."order_item__dbt_tmp" rename to "order_item"
+[0m01:45:03.287765 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.289056 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: COMMIT
+[0m01:45:03.289364 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:45:03.289656 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: COMMIT
+[0m01:45:03.290859 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m01:45:03.292292 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."order_item__dbt_backup"
+[0m01:45:03.292835 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.order_item"
+[0m01:45:03.293164 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.order_item"} */
+drop table if exists "data_warehouse"."public"."order_item__dbt_backup" cascade
+[0m01:45:03.294413 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.001 seconds
+[0m01:45:03.295302 [debug] [Thread-1 (]: On model.data_pipeline_project.order_item: Close
+[0m01:45:03.295916 [info ] [Thread-1 (]: 3 of 8 OK created sql table model public.order_item ............................ [[32mSELECT 3060[0m in 0.04s]
+[0m01:45:03.301204 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.order_item
+[0m01:45:03.304373 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.orders
+[0m01:45:03.306404 [info ] [Thread-1 (]: 4 of 8 START sql table model public.orders ..................................... [RUN]
+[0m01:45:03.307049 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.order_item, now model.data_pipeline_project.orders)
+[0m01:45:03.307496 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.orders
+[0m01:45:03.309518 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.orders"
+[0m01:45:03.310377 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.orders
+[0m01:45:03.313197 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.orders"
+[0m01:45:03.314173 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:45:03.314982 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: BEGIN
+[0m01:45:03.315390 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:45:03.328177 [debug] [Thread-1 (]: SQL status: BEGIN in 0.013 seconds
+[0m01:45:03.329949 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:45:03.331132 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.orders"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."orders__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    id,
+    user_id,
+    is_refund,
+    created_at,
+    updated_at
+FROM "data_warehouse"."public"."orders"
+  );
+  
+[0m01:45:03.335700 [debug] [Thread-1 (]: SQL status: SELECT 1240 in 0.004 seconds
+[0m01:45:03.341483 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:45:03.342794 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.orders"} */
+alter table "data_warehouse"."public"."orders" rename to "orders__dbt_backup"
+[0m01:45:03.345353 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.001 seconds
+[0m01:45:03.348935 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:45:03.349704 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.orders"} */
+alter table "data_warehouse"."public"."orders__dbt_tmp" rename to "orders"
+[0m01:45:03.351688 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.001 seconds
+[0m01:45:03.354442 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: COMMIT
+[0m01:45:03.356370 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:45:03.357639 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: COMMIT
+[0m01:45:03.361095 [debug] [Thread-1 (]: SQL status: COMMIT in 0.002 seconds
+[0m01:45:03.368176 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."orders__dbt_backup"
+[0m01:45:03.369501 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.orders"
+[0m01:45:03.370137 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.orders"} */
+drop table if exists "data_warehouse"."public"."orders__dbt_backup" cascade
+[0m01:45:03.372124 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.001 seconds
+[0m01:45:03.374060 [debug] [Thread-1 (]: On model.data_pipeline_project.orders: Close
+[0m01:45:03.375519 [info ] [Thread-1 (]: 4 of 8 OK created sql table model public.orders ................................ [[32mSELECT 1240[0m in 0.07s]
+[0m01:45:03.377017 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.orders
+[0m01:45:03.378360 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.users
+[0m01:45:03.379139 [info ] [Thread-1 (]: 5 of 8 START sql table model public.users ...................................... [RUN]
+[0m01:45:03.379936 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.orders, now model.data_pipeline_project.users)
+[0m01:45:03.380800 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.users
+[0m01:45:03.385270 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.users"
+[0m01:45:03.388217 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.users
+[0m01:45:03.392315 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.users"
+[0m01:45:03.393329 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:45:03.393737 [debug] [Thread-1 (]: On model.data_pipeline_project.users: BEGIN
+[0m01:45:03.394133 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:45:03.399659 [debug] [Thread-1 (]: SQL status: BEGIN in 0.005 seconds
+[0m01:45:03.400136 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:45:03.400619 [debug] [Thread-1 (]: On model.data_pipeline_project.users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.users"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."users__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    id,
+    name,
+    email,
+    phone,
+    created_at,
+    updated_at
+FROM "data_warehouse"."public"."users"
+  );
+  
+[0m01:45:03.405794 [debug] [Thread-1 (]: SQL status: SELECT 100 in 0.004 seconds
+[0m01:45:03.408481 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:45:03.408897 [debug] [Thread-1 (]: On model.data_pipeline_project.users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.users"} */
+alter table "data_warehouse"."public"."users" rename to "users__dbt_backup"
+[0m01:45:03.409518 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.411729 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:45:03.412125 [debug] [Thread-1 (]: On model.data_pipeline_project.users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.users"} */
+alter table "data_warehouse"."public"."users__dbt_tmp" rename to "users"
+[0m01:45:03.412676 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.414057 [debug] [Thread-1 (]: On model.data_pipeline_project.users: COMMIT
+[0m01:45:03.414497 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:45:03.414995 [debug] [Thread-1 (]: On model.data_pipeline_project.users: COMMIT
+[0m01:45:03.416063 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m01:45:03.418200 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."users__dbt_backup"
+[0m01:45:03.418869 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.users"
+[0m01:45:03.419250 [debug] [Thread-1 (]: On model.data_pipeline_project.users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.users"} */
+drop table if exists "data_warehouse"."public"."users__dbt_backup" cascade
+[0m01:45:03.421010 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.001 seconds
+[0m01:45:03.422134 [debug] [Thread-1 (]: On model.data_pipeline_project.users: Close
+[0m01:45:03.422861 [info ] [Thread-1 (]: 5 of 8 OK created sql table model public.users ................................. [[32mSELECT 100[0m in 0.04s]
+[0m01:45:03.423547 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.users
+[0m01:45:03.423993 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.dim_goods
+[0m01:45:03.424630 [info ] [Thread-1 (]: 6 of 8 START sql table model public.dim_goods .................................. [RUN]
+[0m01:45:03.425074 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.users, now model.data_pipeline_project.dim_goods)
+[0m01:45:03.425416 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.dim_goods
+[0m01:45:03.427777 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.dim_goods"
+[0m01:45:03.428827 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.dim_goods
+[0m01:45:03.432344 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.dim_goods"
+[0m01:45:03.433787 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_goods"
+[0m01:45:03.434240 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: BEGIN
+[0m01:45:03.434681 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:45:03.440478 [debug] [Thread-1 (]: SQL status: BEGIN in 0.006 seconds
+[0m01:45:03.441380 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_goods"
+[0m01:45:03.442487 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_goods"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."dim_goods__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    *
+FROM "data_warehouse"."public"."goods"
+  );
+  
+[0m01:45:03.449445 [debug] [Thread-1 (]: SQL status: SELECT 220 in 0.006 seconds
+[0m01:45:03.453391 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_goods"
+[0m01:45:03.453884 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_goods"} */
+alter table "data_warehouse"."public"."dim_goods" rename to "dim_goods__dbt_backup"
+[0m01:45:03.454782 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.458271 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_goods"
+[0m01:45:03.459263 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_goods"} */
+alter table "data_warehouse"."public"."dim_goods__dbt_tmp" rename to "dim_goods"
+[0m01:45:03.460355 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.463407 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: COMMIT
+[0m01:45:03.464336 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_goods"
+[0m01:45:03.464948 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: COMMIT
+[0m01:45:03.466005 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m01:45:03.468190 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."dim_goods__dbt_backup"
+[0m01:45:03.468874 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_goods"
+[0m01:45:03.469255 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_goods"} */
+drop table if exists "data_warehouse"."public"."dim_goods__dbt_backup" cascade
+[0m01:45:03.471050 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.001 seconds
+[0m01:45:03.472095 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_goods: Close
+[0m01:45:03.473054 [info ] [Thread-1 (]: 6 of 8 OK created sql table model public.dim_goods ............................. [[32mSELECT 220[0m in 0.05s]
+[0m01:45:03.476948 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.dim_goods
+[0m01:45:03.478865 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.dim_users
+[0m01:45:03.479903 [info ] [Thread-1 (]: 7 of 8 START sql table model public.dim_users .................................. [RUN]
+[0m01:45:03.481205 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.dim_goods, now model.data_pipeline_project.dim_users)
+[0m01:45:03.481908 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.dim_users
+[0m01:45:03.487799 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.dim_users"
+[0m01:45:03.489313 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.dim_users
+[0m01:45:03.496040 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.dim_users"
+[0m01:45:03.497312 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_users"
+[0m01:45:03.497735 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: BEGIN
+[0m01:45:03.498144 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:45:03.508404 [debug] [Thread-1 (]: SQL status: BEGIN in 0.010 seconds
+[0m01:45:03.509359 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_users"
+[0m01:45:03.509971 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_users"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."dim_users__dbt_tmp"
+  
+  
+    as
+  
+  (
+    SELECT
+    u.id AS user_id,
+    u.name,
+    u.email,
+    u.phone,
+    MAX(o.updated_at) AS last_transaction
+FROM "data_warehouse"."public"."users" AS u
+LEFT JOIN "data_warehouse"."public"."orders" AS o ON u.id = o.user_id
+GROUP BY u.id, u.name, u.email, u.phone
+  );
+  
+[0m01:45:03.515412 [debug] [Thread-1 (]: SQL status: SELECT 100 in 0.005 seconds
+[0m01:45:03.517966 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_users"
+[0m01:45:03.518320 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_users"} */
+alter table "data_warehouse"."public"."dim_users" rename to "dim_users__dbt_backup"
+[0m01:45:03.519022 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.521065 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_users"
+[0m01:45:03.521434 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_users"} */
+alter table "data_warehouse"."public"."dim_users__dbt_tmp" rename to "dim_users"
+[0m01:45:03.522460 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.524482 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: COMMIT
+[0m01:45:03.524980 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_users"
+[0m01:45:03.525311 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: COMMIT
+[0m01:45:03.526264 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m01:45:03.529679 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."dim_users__dbt_backup"
+[0m01:45:03.531030 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.dim_users"
+[0m01:45:03.531393 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.dim_users"} */
+drop table if exists "data_warehouse"."public"."dim_users__dbt_backup" cascade
+[0m01:45:03.532957 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.001 seconds
+[0m01:45:03.534003 [debug] [Thread-1 (]: On model.data_pipeline_project.dim_users: Close
+[0m01:45:03.534791 [info ] [Thread-1 (]: 7 of 8 OK created sql table model public.dim_users ............................. [[32mSELECT 100[0m in 0.05s]
+[0m01:45:03.536071 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.dim_users
+[0m01:45:03.536780 [debug] [Thread-1 (]: Began running node model.data_pipeline_project.fact_transactions
+[0m01:45:03.537445 [info ] [Thread-1 (]: 8 of 8 START sql table model public.fact_transactions .......................... [RUN]
+[0m01:45:03.538104 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.data_pipeline_project.dim_users, now model.data_pipeline_project.fact_transactions)
+[0m01:45:03.538469 [debug] [Thread-1 (]: Began compiling node model.data_pipeline_project.fact_transactions
+[0m01:45:03.540979 [debug] [Thread-1 (]: Writing injected SQL for node "model.data_pipeline_project.fact_transactions"
+[0m01:45:03.541970 [debug] [Thread-1 (]: Began executing node model.data_pipeline_project.fact_transactions
+[0m01:45:03.544507 [debug] [Thread-1 (]: Writing runtime sql for node "model.data_pipeline_project.fact_transactions"
+[0m01:45:03.545510 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.fact_transactions"
+[0m01:45:03.546073 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: BEGIN
+[0m01:45:03.546659 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+[0m01:45:03.552550 [debug] [Thread-1 (]: SQL status: BEGIN in 0.006 seconds
+[0m01:45:03.553026 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.fact_transactions"
+[0m01:45:03.553629 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.fact_transactions"} */
+
+  
+    
+
+  create  table "data_warehouse"."public"."fact_transactions__dbt_tmp"
+  
+  
+    as
+  
+  (
+    WITH fact_base AS (
+    SELECT
+        o.user_id AS user_id,
+        u.name AS user_name,
+        oi.id AS order_item_id,
+        oi.qty AS number_of_items_ordered,
+        oi.qty * g.price AS total_purchase_value,
+        o.created_at AS order_date
+    FROM "data_warehouse"."public"."order_item" oi
+    JOIN "data_warehouse"."public"."goods" g ON oi.goods_id = g.id
+    JOIN "data_warehouse"."public"."orders" o ON oi.order_id = o.id
+    JOIN "data_warehouse"."public"."users" u ON o.user_id = u.id
+)
+SELECT * FROM fact_base
+  );
+  
+[0m01:45:03.570344 [debug] [Thread-1 (]: SQL status: SELECT 3060 in 0.016 seconds
+[0m01:45:03.573223 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.fact_transactions"
+[0m01:45:03.573620 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.fact_transactions"} */
+alter table "data_warehouse"."public"."fact_transactions" rename to "fact_transactions__dbt_backup"
+[0m01:45:03.574297 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.576715 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.fact_transactions"
+[0m01:45:03.577377 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.fact_transactions"} */
+alter table "data_warehouse"."public"."fact_transactions__dbt_tmp" rename to "fact_transactions"
+[0m01:45:03.578090 [debug] [Thread-1 (]: SQL status: ALTER TABLE in 0.000 seconds
+[0m01:45:03.580032 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: COMMIT
+[0m01:45:03.580606 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.fact_transactions"
+[0m01:45:03.581007 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: COMMIT
+[0m01:45:03.582286 [debug] [Thread-1 (]: SQL status: COMMIT in 0.001 seconds
+[0m01:45:03.584071 [debug] [Thread-1 (]: Applying DROP to: "data_warehouse"."public"."fact_transactions__dbt_backup"
+[0m01:45:03.584767 [debug] [Thread-1 (]: Using postgres connection "model.data_pipeline_project.fact_transactions"
+[0m01:45:03.585120 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: /* {"app": "dbt", "dbt_version": "1.8.7", "profile_name": "default", "target_name": "dev", "node_id": "model.data_pipeline_project.fact_transactions"} */
+drop table if exists "data_warehouse"."public"."fact_transactions__dbt_backup" cascade
+[0m01:45:03.588014 [debug] [Thread-1 (]: SQL status: DROP TABLE in 0.002 seconds
+[0m01:45:03.592055 [debug] [Thread-1 (]: On model.data_pipeline_project.fact_transactions: Close
+[0m01:45:03.592791 [info ] [Thread-1 (]: 8 of 8 OK created sql table model public.fact_transactions ..................... [[32mSELECT 3060[0m in 0.05s]
+[0m01:45:03.593639 [debug] [Thread-1 (]: Finished running node model.data_pipeline_project.fact_transactions
+[0m01:45:03.599190 [debug] [MainThread]: Using postgres connection "master"
+[0m01:45:03.600479 [debug] [MainThread]: On master: BEGIN
+[0m01:45:03.601794 [debug] [MainThread]: Opening a new connection, currently in state closed
+[0m01:45:03.607197 [debug] [MainThread]: SQL status: BEGIN in 0.005 seconds
+[0m01:45:03.607989 [debug] [MainThread]: On master: COMMIT
+[0m01:45:03.609435 [debug] [MainThread]: Using postgres connection "master"
+[0m01:45:03.609742 [debug] [MainThread]: On master: COMMIT
+[0m01:45:03.610162 [debug] [MainThread]: SQL status: COMMIT in 0.000 seconds
+[0m01:45:03.610464 [debug] [MainThread]: On master: Close
+[0m01:45:03.610903 [debug] [MainThread]: Connection 'master' was properly closed.
+[0m01:45:03.611177 [debug] [MainThread]: Connection 'model.data_pipeline_project.fact_transactions' was properly closed.
+[0m01:45:03.611727 [info ] [MainThread]: 
+[0m01:45:03.612309 [info ] [MainThread]: Finished running 8 table models in 0 hours 0 minutes and 0.69 seconds (0.69s).
+[0m01:45:03.613608 [debug] [MainThread]: Command end result
+[0m01:45:03.710628 [info ] [MainThread]: 
+[0m01:45:03.712861 [info ] [MainThread]: [32mCompleted successfully[0m
+[0m01:45:03.714126 [info ] [MainThread]: 
+[0m01:45:03.714777 [info ] [MainThread]: Done. PASS=8 WARN=0 ERROR=0 SKIP=0 TOTAL=8
+[0m01:45:03.718007 [debug] [MainThread]: Resource report: {"command_name": "run", "command_success": true, "command_wall_clock_time": 1.3663363, "process_user_time": 2.306, "process_kernel_time": 0.499973, "process_mem_max_rss": "195736", "process_in_blocks": "0", "process_out_blocks": "0"}
+[0m01:45:03.718718 [debug] [MainThread]: Command `dbt run` succeeded at 01:45:03.718640 after 1.37 seconds
+[0m01:45:03.719434 [debug] [MainThread]: Flushing usage events
