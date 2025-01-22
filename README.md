@@ -19,7 +19,7 @@ The objective of this project is to build an end-to-end ETL (Extract, Transform,
 
 ## Data Architecture
 
-![Airflow overview](./Data-Architecture.jpeg)
+![Airflow overview](./data-architecture.jpeg)
 
 Raw Data Storage:
 Hourly CSV files are uploaded to Azure Blob Storage as the raw data landing zone.
