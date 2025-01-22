@@ -21,14 +21,14 @@ The objective of this project is to build an end-to-end ETL (Extract, Transform,
 
 ![Airflow overview](./data-architecture.jpeg)
 
-Raw Data Storage:
+- Raw Data Storage:
 Hourly CSV files are uploaded to Azure Blob Storage as the raw data landing zone.
-VM Data Pipeline:
-Apache Airflow, hosted in a Docker VM on Azure, orchestrates the ingestion of data from Blob Storage into Azure PostgreSQL (staging schema).
-dbt, hosted in another Docker VM, processes raw data from the staging schema in Azure PostgreSQL to create fact and dimension tables in the warehouse schema.
-Azure Postgres Database Pool:
+- VM Data Pipeline:
+   - Apache Airflow, hosted in a Docker VM on Azure, orchestrates the ingestion of data from Blob Storage into Azure PostgreSQL (staging schema).
+   - dbt, hosted in another Docker VM, processes raw data from the staging schema in Azure PostgreSQL to create fact and dimension tables in the warehouse schema.
+- Azure Postgres Database Pool:
 Azure PostgreSQL stores raw data in the staging schema and transformed data in the warehouse schema.
-Report and Analytics | Machine Learning | Data Science:
+- Report and Analytics | Machine Learning | Data Science:
 Azure Power BI accesses the warehouse schema in Azure PostgreSQL for analytics and reporting.
 
 ## Structure
